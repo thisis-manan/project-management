@@ -1,0 +1,22 @@
+{
+  "name": "project-management",
+  "version": "1.0.0",
+  "description": "a project management for beginners beginners",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": " node index.js"
+  },
+  "keywords": [
+    "udemy",
+    "course",
+    "backend",
+    "API",
+    "creation"
+  ],
+  "author": "Manan Agarwal",
+  "license": "ISC",
+  "devDependencies": {
+    "prettier": "3.8.1"
+  }
+}
