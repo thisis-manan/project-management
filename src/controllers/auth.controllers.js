@@ -4,8 +4,9 @@ import { ApiError } from "../utils/api-error.js";
 import { asyncHandler } from "../utils/async-handler.js";
 import { sendEmail } from "../utils/mail.js";
 import { emailVerificationMailContent } from "../utils/mail.js";
+import { forgotPasswordMailContent } from "../utils/mail.js";
 import jwt from "jsonwebtoken";
-import { createHash } from "crypto";
+import crypto from "crypto";
 
 const generateAccessAndRefreshToken = async (userId) => {
   try {
@@ -55,7 +56,7 @@ const registerUser = asyncHandler(async (req, res) => {
     subject: "Please verify your email",
     mailgenContent: emailVerificationMailContent(
       user.username,
-      `${req.protocol}://${req.get("host")}/api/v1/users/verify-email/${unHashedToken}`,
+      `${req.protocol}://${req.get("host")}/api/v1/auth/verify-email/${unHashedToken}`,
     ),
   });
 
@@ -208,7 +209,7 @@ const resendEmailVerification = asyncHandler(async (req, res) => {
     subject: "Please verify your email",
     mailgenContent: emailVerificationMailContent(
       user.username,
-      `${req.protocol}://${req.get("host")}/api/v1/users/verify-email/${unHashedToken}`,
+      `${req.protocol}://${req.get("host")}/api/v1/auth/verify-email/${unHashedToken}`,
     ),
   });
   return res
@@ -280,7 +281,7 @@ const forgotPasswordRequest = asyncHandler(async (req, res) => {
   await sendEmail({
     email: user?.email,
     subject: "Reset your password",
-    mailgenContent: forgotPasswordMailgenContent(
+    mailgenContent: forgotPasswordMailContent(
       user.username,
       `${process.env.FORGOT_PASSWORD_REDIRECT_URL}/${unHashedToken}`,
     ),
@@ -303,7 +304,7 @@ const resetForgotPassword = asyncHandler (async (req, res) => {
 })
 
 if(!user){
-  throw new ApiError(489, "Token is invalid or expired");
+  throw new ApiError(400, "Token is invalid or expired");
 }
  user.forgotPasswordToken = undefined;
  user.forgotPasswordExpiry = undefined;

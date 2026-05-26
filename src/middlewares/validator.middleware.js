@@ -9,7 +9,7 @@ export const validate = (req, res, next) => {
   const extractedErrors = [];
   errors.array().map((err) =>
     extractedErrors.push({
-      [err.param]: err.msg,
+      [err.path]: err.msg,
     }),
   );
   throw new ApiError(400, "Recieved data is not valid", extractedErrors);
