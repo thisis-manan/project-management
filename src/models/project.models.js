@@ -1,12 +1,11 @@
 import mongoose, { Schema } from "mongoose";
-import { refreshAccessToken } from "../controllers/auth.controllers";
 
 const projectSchema = new Schema({
     name: {
         type: String,
         required: true,
-        unque: true,
-        trime: true
+        unique: true,
+        trim: true
     },
     description: {
         type: String

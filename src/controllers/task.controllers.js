@@ -7,7 +7,6 @@ import { ApiError } from "../utils/api-error.js";
 import { asyncHandler } from "../utils/async-handler.js";
 import mongoose from "mongoose";
 import { AvailableUserRole, UserRolesEnum } from "../utils/constants.js";
-import { pipeline } from "nodemailer/lib/xoauth2/index.js";
 
 const getTasks = asyncHandler(async (req, res) => {
   const { projectId } = req.params;
@@ -20,8 +19,8 @@ const getTasks = asyncHandler(async (req, res) => {
   }).populate("assignedTo", "avatar username fullName");
 
   return res
-    .staus(201)
-    .json(new ApiResponse(201, tasks, "Task fetched successfully"));
+    .status(200)
+    .json(new ApiResponse(200, tasks, "Task fetched successfully"));
 });
 const createTask = asyncHandler(async (req, res) => {
   const { title, description, assignedTo, status } = req.body;
@@ -54,7 +53,7 @@ const createTask = asyncHandler(async (req, res) => {
   });
 
   return res
-    .staus(201)
+    .status(201)
     .json(new ApiResponse(201, task, "Task created successfully"));
 });
 const getTaskById = asyncHandler(async (req, res) => {
@@ -74,10 +73,12 @@ const getTaskById = asyncHandler(async (req, res) => {
         as: "assignedTo",
         pipeline: [
           {
-            _id: 1,
-            username: 1,
-            fullName: 1,
-            avatar: 1,
+            $project: {
+              _id: 1,
+              username: 1,
+              fullName: 1,
+              avatar: 1,
+            },
           },
         ],
       },
@@ -134,19 +135,89 @@ const getTaskById = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, task[0], "Task fetched successfully"));
 });
 const updateTask = asyncHandler(async (req, res) => {
-  //chai
+  const { taskId } = req.params;
+  const { title, description, assignedTo, status } = req.body;
+
+  const task = await Task.findById(taskId);
+  if (!task) {
+    throw new ApiError(404, "Task not found");
+  }
+
+  if (title !== undefined) task.title = title;
+  if (description !== undefined) task.description = description;
+  if (status !== undefined) task.status = status;
+  if (assignedTo !== undefined) {
+    task.assignedTo = new mongoose.Types.ObjectId(assignedTo);
+  }
+
+  await task.save();
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, task, "Task updated successfully"));
 });
 const deleteTask = asyncHandler(async (req, res) => {
-  //chai
+  const { taskId } = req.params;
+
+  const task = await Task.findByIdAndDelete(taskId);
+  if (!task) {
+    throw new ApiError(404, "Task not found");
+  }
+
+  await Subtask.deleteMany({ task: new mongoose.Types.ObjectId(taskId) });
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, task, "Task deleted successfully"));
 });
 const createSubTask = asyncHandler(async (req, res) => {
-  //chai
+  const { taskId } = req.params;
+  const { title } = req.body;
+
+  const task = await Task.findById(taskId);
+  if (!task) {
+    throw new ApiError(404, "Task not found");
+  }
+
+  const subtask = await Subtask.create({
+    title,
+    task: new mongoose.Types.ObjectId(taskId),
+    createdBy: new mongoose.Types.ObjectId(req.user._id),
+  });
+
+  return res
+    .status(201)
+    .json(new ApiResponse(201, subtask, "Subtask created successfully"));
 });
 const updateSubTask = asyncHandler(async (req, res) => {
-  //chai
+  const { subTaskId } = req.params;
+  const { title, isCompleted } = req.body;
+
+  const subtask = await Subtask.findById(subTaskId);
+  if (!subtask) {
+    throw new ApiError(404, "Subtask not found");
+  }
+
+  if (title !== undefined) subtask.title = title;
+  if (isCompleted !== undefined) subtask.isCompleted = isCompleted;
+
+  await subtask.save();
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, subtask, "Subtask updated successfully"));
 });
 const deleteSubTask = asyncHandler(async (req, res) => {
-  //chai
+  const { subTaskId } = req.params;
+
+  const subtask = await Subtask.findByIdAndDelete(subTaskId);
+  if (!subtask) {
+    throw new ApiError(404, "Subtask not found");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, subtask, "Subtask deleted successfully"));
 });
 
 export {
