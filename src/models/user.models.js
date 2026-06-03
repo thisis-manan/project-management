@@ -49,7 +49,7 @@ const userSchema = new Schema(
       type: String,
     },
     forgotPasswordExpiry: {
-      type: String,
+      type: Date,
     },
     emailVerificationToken: {
       type: String,
@@ -101,9 +101,9 @@ userSchema.methods.generateTemporaryToken = function () {
         .createHash("sha256")
         .update(unHashedToken)
         .digest("hex")
-    const tokenExpiry = Date.now() + (20*60*100)
+    const tokenExpiry = Date.now() + (20*60*1000)
     return {unHashedToken, hashedToken, tokenExpiry}
 }
 
 
-export const User = mongoose.model("user", userSchema);
+export const User = mongoose.model("User", userSchema);
